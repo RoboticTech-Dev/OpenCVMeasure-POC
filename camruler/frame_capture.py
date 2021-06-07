@@ -43,13 +43,13 @@ class Camera_Thread:
     camera_source = 0
     camera_width = 640
     camera_height = 480
-    camera_frame_rate = 30
+    camera_frame_rate = 1
     camera_fourcc = cv2.VideoWriter_fourcc(*"MJPG")
     # 2nd main option: camera_fourcc = cv2.VideoWriter_fourcc(*"YUYV")
 
     # buffer setup
     buffer_length = 5
-    buffer_all = False
+    buffer_all = True
 
     # ------------------------------
     # System Variables
@@ -175,6 +175,7 @@ class Camera_Thread:
             else:
 
                 grabbed,frame = self.camera.read()
+
                 if not grabbed:
                     break
 

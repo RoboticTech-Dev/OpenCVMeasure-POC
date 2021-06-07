@@ -18,13 +18,13 @@ import frame_draw
 # camera
 #-------------------------------
 # get camera id from argv[1]
-# example "python3 camruler.py 2"
-camera_id = 0
-if len(sys.argv) > 1:
-    camera_id = sys.argv[1]
-    if camera_id.isdigit():
-        camera_id = int(camera_id)
-
+# # example "python3 camruler.py 2"
+# camera_id = 0
+# if len(sys.argv) > 1:
+#     camera_id = sys.argv[1]
+#     if camera_id.isdigit():
+#         camera_id = int(camera_id)
+camera_id = 'camruler/video1.mov'
 # camera thread setup
 camera = frame_capture.Camera_Thread()
 camera.camera_source = camera_id # SET THE CORRECT CAMERA NUMBER
@@ -32,7 +32,7 @@ camera.camera_source = camera_id # SET THE CORRECT CAMERA NUMBER
 #camera.camera_width,camera.camera_height = 1280, 720
 camera.camera_width,camera.camera_height = 1280,1024
 # camera.camera_width,camera.camera_height = 1920,1080
-camera.camera_frame_rate = 30
+camera.camera_frame_rate = 10
 #camera.camera_fourcc = cv2.VideoWriter_fourcc(*"YUYV")
 camera.camera_fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 
@@ -47,7 +47,7 @@ cx = int(width/2)
 cy = int(height/2)
 dm = hypot(cx,cy) # max pixel distance
 frate  = camera.camera_frame_rate
-print('CAMERA:',[camera.camera_source,width,height,area,frate])
+# print('CAMERA:',[camera.camera_source,width,height,area,frate])
 
 #-------------------------------
 # frame drawing/text module 
@@ -146,7 +146,7 @@ def distance(x1,y1,x2,y2):
 #-------------------------------
 
 # define display frame
-framename = "CamRuler ~ ClaytonDarwin's Youtube Channel"
+framename = "MRS POC"
 cv2.namedWindow(framename,flags=cv2.WINDOW_NORMAL|cv2.WINDOW_GUI_NORMAL)
 
 #-------------------------------
@@ -161,6 +161,7 @@ key_flags = {'config':False, # c key
              'norms':False,  # n key
              'rotate':False, # r key
              'lock':False,   # 
+             'Mathaus':True,
              }
 
 def key_flags_clear():
@@ -212,6 +213,15 @@ def key_event(key):
         else:
             key_flags_clear()
             key_flags['auto'] = True
+            mouse_mark = None
+
+    # mathaus mode
+    elif key == 109:
+        if key_flags['Mathaus']:
+            key_flags['Mathaus'] = False
+        else:
+            key_flags_clear()
+            key_flags['Mathaus'] = True
             mouse_mark = None
 
     # auto percent
@@ -445,6 +455,56 @@ while 1:
         # clear mouse
         mouse_mark = None     
 
+
+    
+    #-------------------------------
+    # Mathaus mode
+    #-------------------------------
+    elif key_flags['Mathaus']:
+        
+        mouse_mark = None
+
+        # auto text data
+        text.append('')
+        text.append(f'MATHAUS MODE')
+        text.append(f'UNITS: {unit_suffix}')
+        text.append(f'MIN PERCENT: {auto_percent:.2f}')
+        text.append(f'THRESHOLD: {auto_threshold}')
+        text.append(f'GAUSS BLUR: {auto_blur}')
+        
+        # gray frame
+        frame1 = cv2.cvtColor(frame0,cv2.COLOR_BGR2HSV)
+
+        #Creating a mask
+        low_color  = np.array([101, 155, 84])
+        high_color = np.array([179, 255, 255])
+        
+        color_mask = cv2.inRange(frame1,low_color,high_color)
+
+        _, contours, _ = cv2.findContours(color_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours = sorted(contours, key=lambda x:cv2.contourArea(x), reverse=True)
+
+        ax = False
+        x = 0
+        y = 0
+        w = 0
+        h = 0
+
+        for cnt in contours:
+            (x, y, w, h) = cv2.boundingRect(cnt)
+            # x_medium = int((x + x + w) / 2)
+            ax = True
+            break
+
+        if ax:
+            cv2.rectangle(frame0,(x,y),(x + w, y + h),(0,0,255),2)
+            # cv2.line(frame, (x_medium, 0), (x_medium, 480), (0, 255, 0), 2)
+        
+        frame0 = color_mask
+
+       
+
+
     #-------------------------------
     # auto mode
     #-------------------------------
@@ -593,6 +653,7 @@ while 1:
     text.append(f'R = ROTATE')
     text.append(f'N = NORMALIZE')
     text.append(f'A = AUTO-MODE')
+    text.append(f'M = Mathaus-MODE')
     if key_flags['auto']:
         text.append(f'P = MIN-PERCENT')
         text.append(f'T = THRESHOLD')
@@ -606,13 +667,12 @@ while 1:
     cv2.imshow(framename,frame0)
 
     # key delay and action
-    key = cv2.waitKey(1) & 0xFF
+    key = cv2.waitKey(20) & 0xFF
 
     # esc ==  27 == quit
     # q   == 113 == quit
     if key in (27,113):
         break
-
     # key data
     #elif key != 255:
     elif key not in (-1,255):
