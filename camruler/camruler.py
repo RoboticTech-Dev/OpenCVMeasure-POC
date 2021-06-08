@@ -473,8 +473,8 @@ while 1:
         text.append(f'GAUSS BLUR: {auto_blur}')
         
         # gray frame
-        frame1 = cv2.cvtColor(frame0,cv2.COLOR_BGR2HSV)
-
+        # frame1 = cv2.cvtColor(frame0,cv2.COLOR_BGR2HSV)
+        frame1 = frame0[100:750,:]
         #Creating a mask
         low_color  = np.array([101, 155, 84])
         high_color = np.array([179, 255, 255])
@@ -500,7 +500,7 @@ while 1:
             cv2.rectangle(frame0,(x,y),(x + w, y + h),(0,0,255),2)
             # cv2.line(frame, (x_medium, 0), (x_medium, 480), (0, 255, 0), 2)
         
-        frame0 = color_mask
+        frame0 = frame1
 
        
 
