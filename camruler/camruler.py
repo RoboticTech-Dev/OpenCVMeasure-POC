@@ -349,10 +349,12 @@ cv2.setMouseCallback(framename,mouse_event)
 #-------------------------------
 
 # loop
+camera = cv2.VideoCapture('/home/grin/Downloads/videos_mrs/IMG_8397.mov')
 while 1:
 
     # get frame
-    frame0 = camera.next(wait=1)
+    # frame0 = camera.next(wait=1)
+    (grabbed, frame0) = camera.read()
     if frame0 is None:
         time.sleep(0.1)
         continue

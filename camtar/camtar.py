@@ -2,29 +2,62 @@
 import os,sys,time
 import numpy as np
 import cv2
+from Frechau import Frechau
 
 # init camera
-camera = cv2.VideoCapture(0) ### <<<=== SET THE CORRECT CAMERA NUMBER
-camera.set(3,1280)             # set frame width
-camera.set(4,720)              # set frame height
-time.sleep(0.5)
-print(camera.get(3),camera.get(4))
-print(camera.get(5))
+camera = cv2.VideoCapture('/home/grin/Downloads/videos_mrs/IMG_8397.mov') ### <<<=== SET THE CORRECT CAMERA NUMBER
+# camera.set(3,1280)             # set frame width
+# camera.set(4,720)              # set frame height
+# time.sleep(0.5)
+# print(camera.get(3),camera.get(4))
+# print(camera.get(5))
 
 # master frame
 master = None
+
+# Rectangle frames
+rect_start = np.array([[1200, 200], [1200, 820]])
+rect_size = np.array([150, 50])
+rect_end = rect_start + rect_size
+
+# Frechau class
+fr = Frechau()
 
 while 1:
 
     # grab a frame
     (grabbed,frame0) = camera.read()
-    
+
     # end of feed
     if not grabbed:
         break
 
+    # Grab rectangle to speedup things
+    rectu1 = frame0[rect_start[0, 1]:rect_end[0, 1], rect_start[0, 0]:rect_end[0, 0], :]
+    rectd1 = frame0[rect_start[1, 1]:rect_end[1, 1], rect_start[1, 0]:rect_end[1, 0], :]
+    # cv2.rectangle(frame0, tuple(rect_start[1]), tuple(rect_start[1]+rect_size), (0, 255, 0))
+
     # gray frame
     frame1 = cv2.cvtColor(frame0,cv2.COLOR_BGR2GRAY)
+    rectu2 = cv2.cvtColor(rectu1,cv2.COLOR_BGR2GRAY)
+    rectd2 = cv2.cvtColor(rectd1,cv2.COLOR_BGR2GRAY)
+    # cv2.imwrite('kernel.png', rectu2)
+
+    # Focus the measuring section through Kernel
+    y_start = fr.find_coordinates(rectu2)
+    rectu3 = rectu2[:, y_start:y_start + fr.kernel.shape[1] + 5]
+    cv2.imshow('rectu', rectu3)
+    cv2.waitKey(0)
+
+
+    # Get edges in rectangles
+    edges = cv2.Sobel(rectu2, cv2.CV_8UC1, 0, 4, ksize=5)
+    edges = np.where(edges < 200, 0, edges)
+
+    # Convolve
+    cv2.imshow('edges rectu', edges)
+    cv2.imshow('rectu', rectu1)
+    cv2.waitKey(0)
 
     # blur frame
     frame2 = cv2.GaussianBlur(frame1,(15,15),0)
